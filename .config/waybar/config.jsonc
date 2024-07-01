@@ -3,15 +3,14 @@
     "position": "top", // Waybar position (top|bottom|left|right)
     // "width": 1280, // Waybar width
     // Choose the order of the modules
-    "modules-left": [],
-    "modules-center": ["hyprland/workspaces"],
+    "modules-left": ["hyprland/workspaces"],
+    "modules-center": ["clock"],
     "modules-right": [
         "pulseaudio", 
         "network",
         "backlight", 
         "battery",
         "hyprland/language", 
-        "clock", 
         "tray", 
         "custom/lock", 
         "custom/power"
@@ -39,8 +38,8 @@
     },
     "clock": {
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
-        "format-alt": " {:%d/%m/%Y}",
-        "format": " {:%H:%M}"
+        "format-alt": "{:%a %b%e   %I:%M%p}",
+        "format": "{:%a %H:%M}"
     },
     "backlight": {
         "device": "intel_backlight",
@@ -62,9 +61,9 @@
         "format": "",
     },
     "custom/power": {
-        "tooltip": false,
-        "on-click": "wlogout &",
-        "format": "襤"
+        "format": "⏻",
+        "on-click": "nwgbar",
+        "tooltip": false
     },
     "keyboard-state": {
         "numlock": true,
@@ -83,5 +82,8 @@
         "format-linked": "{ifname} (No IP) ",
         "format-disconnected": "Disconnected ⚠",
         "format-alt": "{ifname}: {ipaddr}/{cidr}"
+    },
+    "hyprland/language": {
+        "format": "{short} "
     }
 }
