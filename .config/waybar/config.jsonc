@@ -10,8 +10,8 @@
         "network",
         "backlight", 
         "battery",
-        "hyprland/language", 
         "tray", 
+        "hyprland/language", 
         "custom/lock", 
         "custom/power"
     ],
@@ -24,8 +24,8 @@
     //      },
     //  },
     "tray": {
-        "icon-size": 21,
-        "spacing": 10
+        "icon-size": 22,
+//        "spacing": 10
     },
     "custom/music": {
         "format": "  {}",

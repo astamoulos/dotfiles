@@ -102,12 +102,10 @@ window#waybar {
     color: @red;
 }
 
-/*
 #tray {
-  margin-right: 1rem;
+  margin-right: 0;
   border-radius: 1rem;
 }
-*/
 
 #language {
     color: @teal;
