@@ -1,7 +1,7 @@
 @import "mocha.css";
 
 * {
-  font-family: Fira Code Nerd Font;
+  font-family: 'Jet Brains Mono Nerd Font';
   font-size: 16px;
   min-height: 0;
 }
