@@ -62,7 +62,7 @@
     },
     "custom/power": {
         "format": "⏻",
-        "on-click": "nwgbar",
+        "on-click": "$HOME/.config/rofi/bin/powermenu.sh",
         "tooltip": false
     },
     "keyboard-state": {
