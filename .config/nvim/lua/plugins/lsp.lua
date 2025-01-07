@@ -1,23 +1,14 @@
 return {
     {
-        'VonHeikemen/lsp-zero.nvim',
-        branch = 'v4.x',
-        lazy = true,
-        config = false,
-    },
-    {
         'williamboman/mason.nvim',
         lazy = false,
-        config = true,
+        opts = {},
     },
 
     -- Autocompletion
     {
         'hrsh7th/nvim-cmp',
         event = 'InsertEnter',
-        dependencies = {
-            { 'L3MON4D3/LuaSnip' },
-        },
         config = function()
             local cmp = require('cmp')
 
@@ -49,35 +40,72 @@ return {
             { 'williamboman/mason.nvim' },
             { 'williamboman/mason-lspconfig.nvim' },
         },
+        init = function()
+            -- Reserve a space in the gutter
+            -- This will avoid an annoying layout shift in the screen
+            vim.opt.signcolumn = 'yes'
+        end,
         config = function()
-            local lsp_zero = require('lsp-zero')
+            local lsp_defaults = require('lspconfig').util.default_config
 
-            -- lsp_attach is where you enable features that only work
-            -- if there is a language server active in the file
-            local lsp_attach = function(client, bufnr)
-                lsp_zero.buffer_autoformat()
-                local opts = { buffer = bufnr }
+            local buffer_autoformat = function(bufnr)
+                local group = 'lsp_autoformat'
+                vim.api.nvim_create_augroup(group, { clear = false })
+                vim.api.nvim_clear_autocmds({ group = group, buffer = bufnr })
 
-                vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', opts)
-                vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
-                vim.keymap.set('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
-                vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
-                vim.keymap.set('n', 'go', '<cmd>lua vim.lsp.buf.type_definition()<cr>', opts)
-                vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', opts)
-                vim.keymap.set('n', 'gs', '<cmd>lua vim.lsp.buf.signature_help()<cr>', opts)
-                vim.keymap.set('n', '<leader>rn', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
-                vim.keymap.set({ 'n', 'x' }, '<leader>f', '<cmd>lua vim.lsp.buf.format({async = true})<cr>', opts)
-                vim.keymap.set('n', '<leader>ca', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
+                vim.api.nvim_create_autocmd('BufWritePre', {
+                    buffer = bufnr,
+                    group = group,
+                    desc = 'LSP format on save',
+                    callback = function()
+                        -- note: do not enable async formatting
+                        vim.lsp.buf.format({ async = false, timeout_ms = 10000 })
+                    end,
+                })
             end
 
-            lsp_zero.extend_lspconfig({
-                sign_text = true,
-                lsp_attach = lsp_attach,
-                capabilities = require('cmp_nvim_lsp').default_capabilities()
+            -- Add cmp_nvim_lsp capabilities settings to lspconfig
+            -- This should be executed before you configure any language server
+            lsp_defaults.capabilities = vim.tbl_deep_extend(
+                'force',
+                lsp_defaults.capabilities,
+                require('cmp_nvim_lsp').default_capabilities()
+            )
+
+            -- LspAttach is where you enable features that only work
+            -- if there is a language server active in the file
+            vim.api.nvim_create_autocmd('LspAttach', {
+                desc = 'LSP actions',
+                callback = function(event)
+                    local opts = { buffer = event.buf }
+
+                    vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', opts)
+                    vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
+                    vim.keymap.set('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
+                    vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
+                    vim.keymap.set('n', 'go', '<cmd>lua vim.lsp.buf.type_definition()<cr>', opts)
+                    vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', opts)
+                    vim.keymap.set('n', 'gs', '<cmd>lua vim.lsp.buf.signature_help()<cr>', opts)
+                    vim.keymap.set('n', '<leader>rn', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
+                    vim.keymap.set({ 'n', 'x' }, '<F3>', '<cmd>lua vim.lsp.buf.format({async = true})<cr>', opts)
+                    vim.keymap.set('n', '<leader>ca', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
+
+                    -- Format on save
+                    local id = vim.tbl_get(event, 'data', 'client_id')
+                    local client = id and vim.lsp.get_client_by_id(id)
+                    if client == nil then
+                        return
+                    end
+
+                    -- make sure there is at least one client with formatting capabilities
+                    if client.supports_method('textDocument/formatting') then
+                        buffer_autoformat(event.buf)
+                    end
+                end,
             })
 
             require('mason-lspconfig').setup({
-                ensure_installed = { "lua_ls", "rust_analyzer" },
+                ensure_installed = {},
                 handlers = {
                     -- this first function is the "default handler"
                     -- it applies to every language server without a "custom handler"
@@ -88,18 +116,15 @@ return {
                     rust_analyzer = function()
                         require('lspconfig').rust_analyzer.setup({
                             settings = {
-                                ["rust-analyzer"] = {
-                                    checkOnSave = true,
-                                    check = {
-                                        enable = true,
-                                        command = "clippy",
-                                        features = "all",
-                                    },
+                                check = {
+                                    command = "clippy",
                                 },
-                            }
+                                diagnostics = {
+                                    enable = true,
+                                }
+                            },
                         })
-                    end,
-
+                    end
                 }
             })
         end
